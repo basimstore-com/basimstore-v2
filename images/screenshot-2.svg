@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <rect width="100%" height="100%" fill="#fff8f2"/>
+  <rect x="40" y="40" width="720" height="370" rx="16" fill="#fff" stroke="#f1e8df"/>
+  <text x="60" y="110" font-family="Jost, sans-serif" font-size="28" fill="#1a1a2e">Basim Store — Product page</text>
+  <text x="60" y="150" font-family="Jost, sans-serif" font-size="14" fill="#6b6b73">Placeholder screenshot. Replace with a real image in images/screenshot-2.svg</text>
+  <g fill="#f3e8dd">
+    <rect x="60" y="180" width="420" height="220" rx="12"/>
+    <rect x="500" y="200" width="220" height="100" rx="12"/>
+  </g>
+</svg>
