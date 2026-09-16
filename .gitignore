@@ -1,35 +1,31 @@
 # Dependencies
 node_modules/
+package-lock.json
 
 # Database
 data/
 *.db
 *.db-journal
 
-# Uploads (keep folder, ignore files)
+# Uploads
 uploads/*
 !uploads/.gitkeep
 
-# Environment (SECRETS)
+# Environment
 .env
 .env.local
-.env.production
 
-# Backups
-*.backup
-*.backup-*
-
-# OS Files
+# OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
 
 # IDE
 .vscode/
 .idea/
+
+# Logs
+*.log
+npm-debug.log*
 
 # Android
 android/
