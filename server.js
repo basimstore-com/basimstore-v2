@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════
-// 🚀 BASIM STORE — COMPLETE BACKEND SERVER
+// 🚀 BASIM STORE — COMPLETE BACKEND SERVER v2.0
 // ═══════════════════════════════════════════════
 
 require('dotenv').config();
@@ -20,6 +20,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'basim-store-secret';
 const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'basim2025';
 
+// ═══ PATHS (Persistent Disk Support) ═══
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const UPLOAD_DIR = process.env.DATA_DIR
+    ? path.join(process.env.DATA_DIR, 'uploads')
+    : path.join(__dirname, 'uploads');
+
+// Ensure all folders exist
+[DATA_DIR, UPLOAD_DIR].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log(`📁 Created: ${dir}`);
+    }
+});
+
 // ═══ APP SETUP ═══
 const app = express();
 const server = http.createServer(app);
@@ -30,30 +44,26 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Static folders
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+app.use('/uploads', express.static(UPLOAD_DIR, {
     acceptRanges: true,
-    fallthrough: false,
     maxAge: '1d',
-    setHeaders: (res, path) => {
-        if (path.endsWith('.mp4') || path.endsWith('.webm')) {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.mp4') || filePath.endsWith('.webm')) {
             res.setHeader('Accept-Ranges', 'bytes');
-            res.setHeader('Content-Type', path.endsWith('.mp4') ? 'video/mp4' : 'video/webm');
+            res.setHeader('Content-Type', filePath.endsWith('.mp4') ? 'video/mp4' : 'video/webm');
         }
     }
 }));
+
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 app.use('/', express.static(path.join(__dirname, 'public')));
-
-// Ensure folders
-['uploads', 'admin', 'public', 'data'].forEach(dir => {
-    const p = path.join(__dirname, dir);
-    if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
-});
 
 // ═══════════════════════════════════════════════
 // 🗄️ DATABASE SETUP
 // ═══════════════════════════════════════════════
-const db = new sqlite3.Database(path.join(__dirname, 'data', 'database.db'));
+const dbPath = path.join(DATA_DIR, 'database.db');
+console.log(`📀 Database: ${dbPath}`);
+const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
     // ═══ PRODUCTS ═══
@@ -114,12 +124,12 @@ db.serialize(() => {
         is_active INTEGER DEFAULT 1
     )`);
 
-    // ═══ SOCIAL MEDIA ═══
+    // ═══ SOCIAL MEDIA (UNIQUE constraint REMOVED) ═══
     db.run(`CREATE TABLE IF NOT EXISTS social_media (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        platform TEXT UNIQUE,
-        name TEXT,
-        url TEXT,
+        platform TEXT NOT NULL,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
         icon TEXT,
         color TEXT,
         description TEXT,
@@ -191,17 +201,22 @@ db.serialize(() => {
         db.run(`INSERT OR IGNORE INTO categories (name, slug, icon, display_order) VALUES (?, ?, ?, ?)`, [name, slug, icon, order]);
     });
 
-    // ═══ DEFAULT SOCIAL ═══
-    const defaultSocial = [
-        ['whatsapp', 'WhatsApp', 'https://wa.me/923347382564', '💬', 'linear-gradient(135deg,#25D366,#128C7E)', 'Chat & order directly', 1],
-        ['instagram', 'Instagram', 'https://instagram.com/nawabwrite786', '📸', 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', 'Photos & stories', 2],
-        ['facebook', 'Facebook', 'https://facebook.com/basimstore', '📘', 'linear-gradient(135deg,#1877F2,#0a5bb5)', 'Like & follow us', 3],
-        ['youtube', 'YouTube', 'https://youtube.com/@nawabwrite', '▶️', 'linear-gradient(135deg,#FF0000,#cc0000)', 'Watch product demos', 4],
-        ['tiktok', 'TikTok', 'https://tiktok.com/@basimstore', '🎵', 'linear-gradient(135deg,#010101,#69C9D0,#010101)', 'Videos & trends', 5]
-    ];
-    defaultSocial.forEach(([platform, name, url, icon, color, description, order]) => {
-        db.run(`INSERT OR IGNORE INTO social_media (platform, name, url, icon, color, description, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)`, [platform, name, url, icon, color, description, order]);
-    });
+    // ═══════════════════════════════════════════════
+    // ⚠️ DEFAULT SOCIAL SEED — COMMENTED OUT
+    // ═══════════════════════════════════════════════
+    // Kyun comment kiya: Server restart par delete kiye hue social wapas aate thay.
+    // Ab aap manually admin panel se social add karein.
+    //
+    // const defaultSocial = [
+    //     ['whatsapp', 'WhatsApp', 'https://wa.me/923347382564', '💬', 'linear-gradient(135deg,#25D366,#128C7E)', 'Chat & order directly', 1],
+    //     ['instagram', 'Instagram', 'https://instagram.com/nawabwrite786', '📸', 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', 'Photos & stories', 2],
+    //     ['facebook', 'Facebook', 'https://facebook.com/basimstore', '📘', 'linear-gradient(135deg,#1877F2,#0a5bb5)', 'Like & follow us', 3],
+    //     ['youtube', 'YouTube', 'https://youtube.com/@nawabwrite', '▶️', 'linear-gradient(135deg,#FF0000,#cc0000)', 'Watch product demos', 4],
+    //     ['tiktok', 'TikTok', 'https://tiktok.com/@basimstore', '🎵', 'linear-gradient(135deg,#010101,#69C9D0,#010101)', 'Videos & trends', 5]
+    // ];
+    // defaultSocial.forEach(([platform, name, url, icon, color, description, order]) => {
+    //     db.run(`INSERT OR IGNORE INTO social_media (platform, name, url, icon, color, description, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)`, [platform, name, url, icon, color, description, order]);
+    // });
 
     // ═══ DEFAULT COUPONS ═══
     const defaultCoupons = [
@@ -219,7 +234,7 @@ db.serialize(() => {
 
 // ═══ FILE UPLOAD ═══
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
     filename: (req, file, cb) => {
         const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
         cb(null, uniqueName);
@@ -351,7 +366,7 @@ app.delete('/api/products/:id', authMiddleware, (req, res) => {
 });
 
 // ═══════════════════════════════════════════════
-// 📸 IMAGE UPLOAD
+// 📸 IMAGE / VIDEO UPLOAD
 // ═══════════════════════════════════════════════
 
 app.post('/api/upload', authMiddleware, upload.fields([
@@ -438,6 +453,7 @@ app.get('/api/categories', (req, res) => {
 
 app.post('/api/categories', authMiddleware, (req, res) => {
     const { name, slug, icon } = req.body;
+    if (!name || !slug) return res.status(400).json({ error: 'Name and slug required' });
     db.run('INSERT INTO categories (name, slug, icon) VALUES (?, ?, ?)', [name, slug, icon || '📁'], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, id: this.lastID });
@@ -446,7 +462,8 @@ app.post('/api/categories', authMiddleware, (req, res) => {
 
 app.put('/api/categories/:id', authMiddleware, (req, res) => {
     const { name, slug, icon, is_active } = req.body;
-    db.run('UPDATE categories SET name = ?, slug = ?, icon = ?, is_active = ? WHERE id = ?', [name, slug, icon, is_active ? 1 : 0, req.params.id], function(err) {
+    db.run('UPDATE categories SET name = ?, slug = ?, icon = ?, is_active = ? WHERE id = ?',
+        [name, slug, icon, is_active ? 1 : 0, req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
@@ -460,37 +477,84 @@ app.delete('/api/categories/:id', authMiddleware, (req, res) => {
 });
 
 // ═══════════════════════════════════════════════
-// 🔗 SOCIAL MEDIA API
+// 🔗 SOCIAL MEDIA API (FIXED — No UNIQUE constraint)
 // ═══════════════════════════════════════════════
 
 app.get('/api/social', (req, res) => {
-    db.all('SELECT * FROM social_media WHERE is_active = 1 ORDER BY display_order ASC', (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    db.all('SELECT * FROM social_media WHERE is_active = 1 ORDER BY display_order ASC, id ASC', (err, rows) => {
+        if (err) {
+            console.error('Social fetch error:', err);
+            return res.status(500).json({ error: err.message });
+        }
         res.json({ social: rows });
     });
 });
 
 app.post('/api/social', authMiddleware, (req, res) => {
     const { platform, name, url, icon, color, description } = req.body;
-    db.run('INSERT INTO social_media (platform, name, url, icon, color, description) VALUES (?, ?, ?, ?, ?, ?)',
-        [platform, name, url, icon, color, description || ''], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, id: this.lastID });
-    });
+
+    if (!platform || !name || !url) {
+        return res.status(400).json({ error: 'Platform, Name, aur URL zaroori hain' });
+    }
+
+    db.run(
+        'INSERT INTO social_media (platform, name, url, icon, color, description) VALUES (?, ?, ?, ?, ?, ?)',
+        [
+            platform.trim(),
+            name.trim(),
+            url.trim(),
+            icon || '🔗',
+            color || 'linear-gradient(135deg,#666,#333)',
+            description || ''
+        ],
+        function(err) {
+            if (err) {
+                console.error('Social insert error:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            console.log(`✅ Social added: ${name} (${platform})`);
+            res.json({ success: true, id: this.lastID });
+        }
+    );
 });
 
 app.put('/api/social/:id', authMiddleware, (req, res) => {
     const { platform, name, url, icon, color, description, is_active } = req.body;
-    db.run('UPDATE social_media SET platform = ?, name = ?, url = ?, icon = ?, color = ?, description = ?, is_active = ? WHERE id = ?',
-        [platform, name, url, icon, color, description, is_active ? 1 : 0, req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true });
-    });
+
+    if (!platform || !name || !url) {
+        return res.status(400).json({ error: 'Platform, Name, aur URL zaroori hain' });
+    }
+
+    db.run(
+        'UPDATE social_media SET platform = ?, name = ?, url = ?, icon = ?, color = ?, description = ?, is_active = ? WHERE id = ?',
+        [
+            platform.trim(),
+            name.trim(),
+            url.trim(),
+            icon || '🔗',
+            color || 'linear-gradient(135deg,#666,#333)',
+            description || '',
+            is_active === undefined ? 1 : (is_active ? 1 : 0),
+            req.params.id
+        ],
+        function(err) {
+            if (err) {
+                console.error('Social update error:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            console.log(`✅ Social updated: ${name}`);
+            res.json({ success: true });
+        }
+    );
 });
 
 app.delete('/api/social/:id', authMiddleware, (req, res) => {
     db.run('DELETE FROM social_media WHERE id = ?', [req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error('Social delete error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log(`🗑️ Social deleted: ID ${req.params.id}`);
         res.json({ success: true });
     });
 });
@@ -508,8 +572,11 @@ app.get('/api/coupons', (req, res) => {
 
 app.post('/api/coupons', authMiddleware, (req, res) => {
     const { code, type, value, description, min_order } = req.body;
+    if (!code || !type || !value) {
+        return res.status(400).json({ error: 'Code, type, aur value zaroori hain' });
+    }
     db.run('INSERT INTO coupons (code, type, value, description, min_order) VALUES (?, ?, ?, ?, ?)',
-        [code.toUpperCase(), type, value, description, min_order || 0], function(err) {
+        [code.toUpperCase().trim(), type, value, description || '', min_order || 0], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, id: this.lastID });
     });
@@ -537,6 +604,9 @@ app.get('/api/settings', (req, res) => {
 
 app.put('/api/settings', authMiddleware, (req, res) => {
     const updates = req.body;
+    if (!updates || typeof updates !== 'object') {
+        return res.status(400).json({ error: 'Invalid data' });
+    }
     db.serialize(() => {
         Object.entries(updates).forEach(([key, value]) => {
             db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, String(value)]);
@@ -600,11 +670,9 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => console.log('❌ Disconnected:', socket.id));
 });
 
-
 // ═══ GLOBAL ERROR HANDLER ═══
 app.use((err, req, res, next) => {
     if (err.name === 'RangeNotSatisfiableError' || err.status === 416) {
-        // Silent handle — log but don't crash
         res.status(416).send('Range Not Satisfiable');
         return;
     }
@@ -617,8 +685,11 @@ app.use((err, req, res, next) => {
 // ═══ START SERVER ═══
 server.listen(PORT, () => {
     console.log('═══════════════════════════════════════════════');
-    console.log('🚀 BASIM STORE SERVER STARTED');
+    console.log('🚀 BASIM STORE SERVER STARTED v2.0');
     console.log('═══════════════════════════════════════════════');
+    console.log('');
+    console.log(`📀 Data Directory: ${DATA_DIR}`);
+    console.log(`📸 Uploads:       ${UPLOAD_DIR}`);
     console.log('');
     console.log(`🌐 User Website:  http://localhost:${PORT}/`);
     console.log(`👑 Admin Panel:   http://localhost:${PORT}/admin/`);
