@@ -1,0 +1,19 @@
+{
+  "name": "Basim Store — Premium Fashion",
+  "short_name": "Basim Store",
+  "description": "Premium Fashion Pakistan. 400+ Products, Cash on Delivery.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf8f5",
+  "theme_color": "#1a1a2e",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["shopping", "fashion", "lifestyle"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
