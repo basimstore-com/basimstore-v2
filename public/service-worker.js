@@ -1,6 +1,6 @@
 /* Basim Store — Service Worker v1.0 */
-const CACHE_NAME = 'basim-store-v1';
-const RUNTIME_CACHE = 'basim-runtime-v1';
+const CACHE_NAME = 'basim-store-v2';
+const RUNTIME_CACHE = 'basim-runtime-v2';
 
 const CORE_ASSETS = [
   './',
@@ -60,6 +60,15 @@ self.addEventListener('fetch', event => {
         }).catch(() => new Response('', { status: 404 }));
       })
     );
+    return;
+  }
+
+  // Never cache API — categories/products/settings must stay live
+  if (request.url.includes('/api/')) {
+    event.respondWith(fetch(request).catch(() => new Response(JSON.stringify({ error: 'offline' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    })));
     return;
   }
 
