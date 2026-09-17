@@ -337,7 +337,39 @@
     </div>
 </div>
 
+
+<!-- CATEGORY MODAL -->
+<div class="modal-overlay" id="categoryModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <div class="modal-title" id="catModalTitle">➕ Add Category</div>
+            <button class="modal-close" onclick="closeCategoryModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="catId">
+            <div class="form-group">
+                <label class="form-label">Category Name *</label>
+                <input type="text" id="cat_name" class="form-input" placeholder="e.g. Shoes" oninput="autoSlugFromName()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Slug (URL / filter key) *</label>
+                <input type="text" id="cat_slug" class="form-input" placeholder="shoes">
+                <small style="color:var(--text-muted);font-size:11px;">Products is category field se match hona chahiye (e.g. shirt, dress)</small>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Icon (Emoji)</label>
+                <input type="text" id="cat_icon" class="form-input" placeholder="👟" maxlength="8">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeCategoryModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveCategory()">💾 Save</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast"></div>
+
 
 <script>
 const API = window.location.origin + '/api';
@@ -566,43 +598,97 @@ async function loadCategories() {
         
         document.getElementById('categoryList').innerHTML = list.length ? list.map(c => `
             <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:10px;margin-bottom:10px;">
-                <div style="font-size:28px;">${c.icon}</div>
+                <div style="font-size:28px;">${c.icon || '📁'}</div>
                 <div style="flex:1;">
-                    <div><b>${c.name}</b></div>
-                    <div style="font-size:12px;color:var(--text-muted);">slug: ${c.slug}</div>
+                    <div><b>${escapeHtmlCat(c.name)}</b></div>
+                    <div style="font-size:12px;color:var(--text-muted);">slug: ${escapeHtmlCat(c.slug)}</div>
                 </div>
-                <button class="btn btn-sm btn-danger" onclick="deleteCategory(${c.id}, '${c.name}')">🗑️</button>
+                <button class="btn btn-sm btn-secondary" onclick='editCategory(${JSON.stringify({id:c.id,name:c.name,slug:c.slug,icon:c.icon||"📁"})})'>✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteCategory(${c.id})">🗑️</button>
             </div>
-        `).join('') : '<div style="text-align:center;padding:30px;color:var(--text-muted);">No categories</div>';
-    } catch (err) { console.error(err); }
+        `).join('') : '<div style="text-align:center;padding:30px;color:var(--text-muted);">No categories — Add one</div>';
+    } catch (err) { console.error(err); showToast('Categories load failed', 'error'); }
 }
 
-async function addCategory() {
-    const name = prompt('Category name (e.g. Shoes):');
-    if (!name) return;
-    const slug = name.toLowerCase().replace(/\s+/g, '-');
-    const icon = prompt('Icon emoji:', '📁') || '📁';
+function escapeHtmlCat(str) {
+    if (str == null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function addCategory() {
+    document.getElementById('catId').value = '';
+    document.getElementById('cat_name').value = '';
+    document.getElementById('cat_slug').value = '';
+    document.getElementById('cat_icon').value = '📁';
+    document.getElementById('catModalTitle').textContent = '➕ Add Category';
+    document.getElementById('categoryModal').classList.add('open');
+}
+
+function editCategory(c) {
+    document.getElementById('catId').value = c.id || '';
+    document.getElementById('cat_name').value = c.name || '';
+    document.getElementById('cat_slug').value = c.slug || '';
+    document.getElementById('cat_icon').value = c.icon || '📁';
+    document.getElementById('catModalTitle').textContent = '✏️ Edit Category';
+    document.getElementById('categoryModal').classList.add('open');
+}
+
+function closeCategoryModal() {
+    document.getElementById('categoryModal').classList.remove('open');
+}
+
+function autoSlugFromName() {
+    const name = document.getElementById('cat_name').value.trim();
+    const slugEl = document.getElementById('cat_slug');
+    // Only auto-fill slug when adding (empty id) or slug still empty
+    if (!document.getElementById('catId').value || !slugEl.value.trim()) {
+        slugEl.value = name.toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+    }
+}
+
+async function saveCategory() {
+    const id = document.getElementById('catId').value;
+    const name = document.getElementById('cat_name').value.trim();
+    let slug = document.getElementById('cat_slug').value.trim();
+    const icon = document.getElementById('cat_icon').value.trim() || '📁';
+    
+    if (!name) { showToast('Name zaroori hai', 'error'); return; }
+    if (!slug) {
+        slug = name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+    }
     
     try {
-        const r = await fetch(`${API}/categories`, {
-            method: 'POST', headers,
-            body: JSON.stringify({ name, slug, icon })
-        });
+        const url = id ? `${API}/categories/${id}` : `${API}/categories`;
+        const method = id ? 'PUT' : 'POST';
+        const body = id
+            ? { name, slug, icon, is_active: 1 }
+            : { name, slug, icon };
+        const r = await fetch(url, { method, headers, body: JSON.stringify(body) });
         const res = await r.json();
         if (res.success) {
-            showToast('✅ Category added', 'success');
+            showToast(id ? '✅ Category updated' : '✅ Category added', 'success');
+            closeCategoryModal();
             loadCategories();
+        } else {
+            showToast(res.error || 'Failed', 'error');
         }
     } catch (err) { showToast('Error', 'error'); }
 }
 
-async function deleteCategory(id, name) {
-    if (!confirm(`Delete "${name}"?`)) return;
+async function deleteCategory(id) {
+    if (!confirm('Delete this category?')) return;
     try {
-        await fetch(`${API}/categories/${id}`, { method: 'DELETE', headers });
-        showToast('Deleted', 'success');
-        loadCategories();
-    } catch (err) {}
+        const r = await fetch(`${API}/categories/${id}`, { method: 'DELETE', headers });
+        const res = await r.json();
+        if (res.success !== false) {
+            showToast('Deleted', 'success');
+            loadCategories();
+        } else showToast('Delete failed', 'error');
+    } catch (err) { showToast('Error', 'error'); }
 }
 
 // ═══ INIT ═══
