@@ -1508,25 +1508,27 @@ async function loadLiveCategories() {
 }
 
 function renderLiveCategories() {
+  const esc = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const safeSlug = (s) => String(s ?? '').replace(/[^a-zA-Z0-9_-]/g, '');
+
   const scroll = document.querySelector('.cat-scroll');
   if (scroll) {
     let html = `<span class="cat-pill active" onclick="filterAndGo('all')">✨ <span data-en="All" data-ur="سب">All</span></span>`;
     LIVE_CATEGORIES.forEach(c => {
-      const slug = c.slug || (c.name||'').toLowerCase();
-      html += `<span class="cat-pill" onclick="filterAndGo('${slug}')">${c.icon||'📁'} <span>${c.name}</span></span>`;
+      const slug = safeSlug(c.slug || (c.name||'').toLowerCase());
+      html += `<span class="cat-pill" onclick="filterAndGo('${slug}')">${esc(c.icon||'📁')} <span>${esc(c.name)}</span></span>`;
     });
     scroll.innerHTML = html;
   }
 
-  // Update cats modal grid
   const grid = document.querySelector('#catsModal .cats-grid');
   if (grid) {
     let mhtml = `<div class="cat-card" onclick="filterAndGo('all');closeModal('catsModal');"><div class="cat-card-icon">✨</div><div class="cat-card-lbl">All</div></div>`;
     LIVE_CATEGORIES.forEach(c => {
-      const slug = c.slug || (c.name||'').toLowerCase();
+      const slug = safeSlug(c.slug || (c.name||'').toLowerCase());
       mhtml += `<div class="cat-card" onclick="filterAndGo('${slug}');closeModal('catsModal');">
-        <div class="cat-card-icon">${c.icon||'📁'}</div>
-        <div class="cat-card-lbl">${c.name}</div>
+        <div class="cat-card-icon">${esc(c.icon||'📁')}</div>
+        <div class="cat-card-lbl">${esc(c.name)}</div>
       </div>`;
     });
     grid.innerHTML = mhtml;
