@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — Basim Store</title>
+<link rel="stylesheet" href="admin.css">
+<style>
+    .login-error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 16px;
+        display: none;
+    }
+    .login-error.show { display: block; }
+    .login-info {
+        background: var(--primary-light);
+        color: var(--primary-dark);
+        padding: 12px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        margin-top: 16px;
+        text-align: center;
+        border: 1px solid var(--primary);
+    }
+    .login-info b { color: var(--primary-dark); }
+</style>
+</head>
+<body>
+
+<div class="login-page">
+    <div class="login-box">
+        <div class="login-logo">👑</div>
+        <div class="login-title">C$K4 Admin</div>
+        <div class="login-sub">Control Center</div>
+
+        <div class="login-error" id="errorMsg"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="username" class="form-input" 
+                       placeholder="admin" autocomplete="username" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div style="position:relative;">
+                    <input type="password" id="password" class="form-input"
+                           style="padding-right:44px;"
+                           placeholder="••••••••" autocomplete="current-password" required>
+                    <button type="button" id="togglePasswordBtn" onclick="togglePasswordVisibility()"
+                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:4px;line-height:1;"
+                            aria-label="Show password" title="Show/Hide password">👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                🔐 Login
+            </button>
+        </form>
+
+        <div class="login-info">
+            <b>Demo:</b> admin / basim2025
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = window.location.origin + '/api';
+
+// Check if already logged in
+window.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+        // Verify token
+        fetch(`${API_URL}/admin/verify`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.valid) {
+                window.location.href = 'dashboard.html';
+            } else {
+                localStorage.removeItem('admin_token');
+            }
+        })
+        .catch(() => localStorage.removeItem('admin_token'));
+    }
+});
+
+function togglePasswordVisibility() {
+    const pwd = document.getElementById('password');
+    const btn = document.getElementById('togglePasswordBtn');
+    if (pwd.type === 'password') {
+        pwd.type = 'text';
+        btn.textContent = '🙈';
+        btn.setAttribute('aria-label', 'Hide password');
+    } else {
+        pwd.type = 'password';
+        btn.textContent = '👁️';
+        btn.setAttribute('aria-label', 'Show password');
+    }
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('loginBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    
+    errorMsg.classList.remove('show');
+    btn.disabled = true;
+    btn.textContent = '⏳ Logging in...';
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.token) {
+            localStorage.setItem('admin_token', data.token);
+            localStorage.setItem('admin_user', username);
+            
+            btn.textContent = '✅ Success!';
+            
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 500);
+        } else {
+            errorMsg.textContent = '❌ ' + (data.error || 'Invalid credentials');
+            errorMsg.classList.add('show');
+            btn.disabled = false;
+            btn.textContent = '🔐 Login';
+        }
+    } catch (err) {
+        console.error(err);
+        errorMsg.textContent = '❌ Server error. Is the server running?';
+        errorMsg.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = '🔐 Login';
+    }
+}
+</script>
+
+</body>
+</html>

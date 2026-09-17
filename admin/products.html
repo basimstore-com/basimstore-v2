@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products — Basim Store Admin</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-icon">👑</div>
+            <div class="sidebar-brand-text">C$K4</div>
+            <div class="sidebar-brand-sub">Admin Panel</div>
+        </div>
+        <ul class="sidebar-menu">
+            <a href="dashboard.html" class="sidebar-item"><span class="sidebar-icon">📊</span><span>Dashboard</span></a>
+            <a href="products.html" class="sidebar-item active"><span class="sidebar-icon">📦</span><span>Products</span></a>
+            <a href="orders.html" class="sidebar-item"><span class="sidebar-icon">🛒</span><span>Orders</span><span class="sidebar-badge" id="pendingBadge" style="display:none">0</span></a>
+            <a href="settings.html" class="sidebar-item"><span class="sidebar-icon">⚙️</span><span>Settings</span></a>
+            <div style="height:1px;background:rgba(200,151,58,.2);margin:12px 16px;"></div>
+            <a href="../" class="sidebar-item" target="_blank"><span class="sidebar-icon">🌐</span><span>View Website</span></a>
+            <a href="#" class="sidebar-item" onclick="logout();return false;"><span class="sidebar-icon">🚪</span><span>Logout</span></a>
+        </ul>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-topbar">
+            <div class="topbar-title">📦 Products</div>
+            <div class="topbar-actions">
+                <button class="btn btn-secondary btn-sm" onclick="loadProducts()">🔄 Refresh</button>
+                <button class="btn btn-primary btn-sm" onclick="openModal()">➕ Add Product</button>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title">All Products (<span id="productCount">0</span>)</div>
+                <input type="text" class="form-input" style="max-width:250px;" placeholder="🔍 Search products..." oninput="filterProducts(this.value)">
+            </div>
+            <div id="productsContainer">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="productModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <div class="modal-title" id="modalTitle">➕ Add Product</div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="productId">
+            
+            <div class="form-group">
+                <label class="form-label">Product Name *</label>
+                <input type="text" id="pName" class="form-input" placeholder="e.g. Black Cotton Formal Shirt">
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Price (₨) *</label>
+                    <input type="number" id="pPrice" class="form-input" placeholder="1500">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Original Price (₨)</label>
+                    <input type="number" id="pOriginalPrice" class="form-input" placeholder="2000">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Discount (%)</label>
+                    <input type="number" id="pDiscount" class="form-input" placeholder="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock</label>
+                    <input type="number" id="pStock" class="form-input" placeholder="100" value="100">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <select id="pCategory" class="form-select">
+                        <option value="">-- Select --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Color</label>
+                    <input type="text" id="pColor" class="form-input" placeholder="Black">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Size</label>
+                    <input type="text" id="pSize" class="form-input" placeholder="M">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Material</label>
+                    <input type="text" id="pMaterial" class="form-input" placeholder="Cotton">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea id="pDescription" class="form-textarea" placeholder="Product description..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">📸 Product Images</label>
+                <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                    <input type="file" id="imageInput" accept="image/*" multiple style="display:none" onchange="uploadImages(this)">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-title">Click to upload images</div>
+                    <div class="upload-sub">PNG, JPG — Multiple allowed (max 10MB each)</div>
+                </div>
+                <div class="img-thumbnails" id="imageThumbs"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">🎥 Product Videos</label>
+                <div class="upload-area" onclick="document.getElementById('videoInput').click()" style="border-color:#2980b9;background:rgba(41,128,185,.08);">
+                    <input type="file" id="videoInput" accept="video/*" multiple style="display:none" onchange="uploadVideos(this)">
+                    <div class="upload-icon">🎥</div>
+                    <div class="upload-title">Click to upload videos</div>
+                    <div class="upload-sub">MP4, WebM — Multiple allowed (max 50MB each)</div>
+                </div>
+                <div class="img-thumbnails" id="videoThumbs"></div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="pFeatured"> Featured
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="pNew"> New Arrival
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="saveBtn" onclick="saveProduct()">💾 Save Product</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = window.location.origin + '/api';
+const token = localStorage.getItem('admin_token');
+if (!token) window.location.href = 'login.html';
+
+const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+let allProducts = [];
+let uploadedImages = [];
+let uploadedVideos = [];
+let categories = [];
+
+function showToast(msg, type = '') {
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.textContent = msg;
+    document.getElementById('toast').appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+function logout() {
+    if (confirm('Logout?')) {
+        localStorage.removeItem('admin_token');
+        window.location.href = 'login.html';
+    }
+}
+
+// ═══ LOAD CATEGORIES ═══
+async function loadCategories() {
+    try {
+        const r = await fetch(`${API}/categories`);
+        const d = await r.json();
+        categories = d.categories || [];
+        const sel = document.getElementById('pCategory');
+        sel.innerHTML = '<option value="">-- Select --</option>' + 
+            categories.map(c => `<option value="${c.slug}">${c.icon} ${c.name}</option>`).join('');
+    } catch (err) { console.error(err); }
+}
+
+// ═══ LOAD PRODUCTS ═══
+async function loadProducts() {
+    try {
+        const r = await fetch(`${API}/products`);
+        const d = await r.json();
+        allProducts = d.products || [];
+        renderProducts(allProducts);
+        document.getElementById('productCount').textContent = allProducts.length;
+    } catch (err) {
+        console.error(err);
+        showToast('Failed to load', 'error');
+    }
+}
+
+function renderProducts(products) {
+    const el = document.getElementById('productsContainer');
+    
+    if (!products.length) {
+        el.innerHTML = `<div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <div class="empty-title">No products yet</div>
+            <p>Click "Add Product" to create your first product</p>
+        </div>`;
+        return;
+    }
+
+    el.innerHTML = `<table class="data-table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Category</th>
+                <th>Stock</th>
+                <th>Badges</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${products.map(p => `
+                <tr>
+                    <td><img src="${p.images[0] || ''}" onerror="this.style.display='none'" style="width:48px;height:48px;border-radius:8px;object-fit:cover;"></td>
+                    <td><b>${p.name}</b><br><small style="color:var(--text-muted)">${p.color || ''} ${p.size || ''}</small></td>
+                    <td><b>₨${p.price.toLocaleString()}</b>${p.discount ? `<br><small style="color:var(--danger)">-${p.discount}%</small>` : ''}</td>
+                    <td>${p.category || '—'}</td>
+                    <td>${p.stock || 0}</td>
+                    <td>
+                        ${p.isFeatured ? '<span class="badge badge-featured">⭐ Featured</span>' : ''}
+                        ${p.isNew ? '<span class="badge badge-new">🆕 New</span>' : ''}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="editProduct(${p.id})">✏️</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\\\'")}')">🗑️</button>
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>`;
+}
+
+function filterProducts(q) {
+    if (!q) { renderProducts(allProducts); return; }
+    const filtered = allProducts.filter(p => 
+        p.name.toLowerCase().includes(q.toLowerCase()) || 
+        (p.category || '').toLowerCase().includes(q.toLowerCase())
+    );
+    renderProducts(filtered);
+}
+
+// ═══ MODAL ═══
+function openModal(product = null) {
+    document.getElementById('productModal').classList.add('open');
+    uploadedImages = [];
+    
+    if (product) {
+        document.getElementById('modalTitle').textContent = '✏️ Edit Product';
+        document.getElementById('productId').value = product.id;
+        document.getElementById('pName').value = product.name || '';
+        document.getElementById('pPrice').value = product.price || '';
+        document.getElementById('pOriginalPrice').value = product.originalPrice || product.original_price || '';
+        document.getElementById('pDiscount').value = product.discount || 0;
+        document.getElementById('pStock').value = product.stock || 100;
+        document.getElementById('pCategory').value = product.category || '';
+        document.getElementById('pColor').value = product.color || '';
+        document.getElementById('pSize').value = product.size || '';
+        document.getElementById('pMaterial').value = product.material || '';
+        document.getElementById('pDescription').value = product.description || '';
+        document.getElementById('pFeatured').checked = product.isFeatured || false;
+        document.getElementById('pNew').checked = product.isNew || false;
+        
+        uploadedImages = product.images || [];
+        let vids = product.videos || [];
+        if (typeof vids === 'string') { try { vids = JSON.parse(vids); } catch(e) { vids = []; } }
+        if (!Array.isArray(vids)) vids = [];
+        uploadedVideos = vids.filter(v => v && typeof v === 'string' && (v.startsWith('/uploads/') || v.startsWith('http')));
+        renderImageThumbs();
+        renderVideoThumbs();
+    } else {
+        document.getElementById('modalTitle').textContent = '➕ Add Product';
+        ['productId','pName','pPrice','pOriginalPrice','pColor','pSize','pMaterial','pDescription'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('pDiscount').value = 0;
+        document.getElementById('pStock').value = 100;
+        document.getElementById('pCategory').value = '';
+        document.getElementById('pFeatured').checked = false;
+        document.getElementById('pNew').checked = false;
+        document.getElementById('imageThumbs').innerHTML = '';
+        document.getElementById('videoThumbs').innerHTML = '';
+        uploadedVideos = [];
+    }
+}
+
+function closeModal() {
+    document.getElementById('productModal').classList.remove('open');
+}
+
+// ═══ IMAGE UPLOAD ═══
+async function uploadImages(input) {
+    const files = input.files;
+    if (!files.length) return;
+
+    const formData = new FormData();
+    for (let f of files) formData.append('files', f);
+
+    showToast('Uploading...', 'info');
+
+    try {
+        const r = await fetch(`${API}/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: formData
+        });
+        const d = await r.json();
+        
+        if (d.success) {
+            uploadedImages = [...uploadedImages, ...d.urls];
+            renderImageThumbs();
+            showToast(`✅ ${d.urls.length} image(s) uploaded`, 'success');
+        } else {
+            showToast('Upload failed', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Upload error', 'error');
+    }
+    
+    input.value = '';
+}
+
+async function uploadVideos(input) {
+    const files = input.files;
+    if (!files.length) return;
+
+    const formData = new FormData();
+    for (let f of files) formData.append('files', f);
+
+    showToast('Uploading videos...', 'info');
+
+    try {
+        const r = await fetch(`${API}/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: formData
+        });
+        const d = await r.json();
+        
+        if (d.success) {
+            uploadedVideos = [...uploadedVideos, ...d.urls];
+            renderVideoThumbs();
+            showToast(`✅ ${d.urls.length} video(s) uploaded`, 'success');
+        } else {
+            showToast('Upload failed', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Upload error', 'error');
+    }
+    
+    input.value = '';
+}
+
+function renderVideoThumbs() {
+    const el = document.getElementById('videoThumbs');
+    el.innerHTML = uploadedVideos.map((url, i) => `
+        <div class="img-thumb-wrap">
+            <video class="img-thumb" src="${url}" muted style="background:#000;"></video>
+            <button class="img-thumb-remove" onclick="removeVideo(${i})">✕</button>
+        </div>
+    `).join('');
+}
+
+function removeVideo(i) {
+    uploadedVideos.splice(i, 1);
+    renderVideoThumbs();
+}
+
+function renderImageThumbs() {
+    const el = document.getElementById('imageThumbs');
+    el.innerHTML = uploadedImages.map((url, i) => `
+        <div class="img-thumb-wrap">
+            <img class="img-thumb" src="${url}">
+            <button class="img-thumb-remove" onclick="removeImage(${i})">✕</button>
+        </div>
+    `).join('');
+}
+
+function removeImage(i) {
+    uploadedImages.splice(i, 1);
+    renderImageThumbs();
+}
+
+// ═══ SAVE PRODUCT ═══
+async function saveProduct() {
+    const id = document.getElementById('productId').value;
+    const data = {
+        name: document.getElementById('pName').value.trim(),
+        price: parseInt(document.getElementById('pPrice').value) || 0,
+        originalPrice: parseInt(document.getElementById('pOriginalPrice').value) || 0,
+        discount: parseInt(document.getElementById('pDiscount').value) || 0,
+        stock: parseInt(document.getElementById('pStock').value) || 100,
+        category: document.getElementById('pCategory').value,
+        color: document.getElementById('pColor').value.trim(),
+        size: document.getElementById('pSize').value.trim(),
+        material: document.getElementById('pMaterial').value.trim(),
+        description: document.getElementById('pDescription').value.trim(),
+        images: uploadedImages,
+        videos: Array.isArray(uploadedVideos) ? uploadedVideos.filter(v => typeof v === 'string' && v.length > 0) : [],
+        featured: document.getElementById('pFeatured').checked,
+        isNew: document.getElementById('pNew').checked
+    };
+
+    if (!data.name || !data.price) {
+        showToast('Name and price required!', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Saving...';
+
+    try {
+        const url = id ? `${API}/products/${id}` : `${API}/products`;
+        const method = id ? 'PUT' : 'POST';
+        
+        const r = await fetch(url, { method, headers, body: JSON.stringify(data) });
+        const res = await r.json();
+        
+        if (res.success) {
+            showToast('✅ Product saved!', 'success');
+            closeModal();
+            loadProducts();
+        } else {
+            showToast('Save failed: ' + (res.error || 'Unknown'), 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Server error', 'error');
+    }
+    
+    btn.disabled = false;
+    btn.textContent = '💾 Save Product';
+}
+
+// ═══ EDIT PRODUCT ═══
+async function editProduct(id) {
+    try {
+        const r = await fetch(`${API}/products/${id}`);
+        const p = await r.json();
+        openModal(p);
+    } catch (err) {
+        showToast('Failed to load product', 'error');
+    }
+}
+
+// ═══ DELETE PRODUCT ═══
+async function deleteProduct(id, name) {
+    if (!confirm(`Delete "${name}"?`)) return;
+    
+    try {
+        const r = await fetch(`${API}/products/${id}`, { method: 'DELETE', headers });
+        const res = await r.json();
+        
+        if (res.success) {
+            showToast('🗑️ Deleted', 'success');
+            loadProducts();
+        } else {
+            showToast('Delete failed', 'error');
+        }
+    } catch (err) {
+        showToast('Error', 'error');
+    }
+}
+
+// ═══ INIT ═══
+loadCategories();
+loadProducts();
+</script>
+
+</body>
+</html>

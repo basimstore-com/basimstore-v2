@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Basim Store Admin</title>
+<link rel="stylesheet" href="admin.css">
+<style>
+.tab-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+.tab-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: all .2s;
+}
+.tab-btn.active {
+    background: linear-gradient(135deg, #d4a04a, #c8973a);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(200,151,58,.3);
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-icon">👑</div>
+            <div class="sidebar-brand-text">C$K4</div>
+            <div class="sidebar-brand-sub">Admin Panel</div>
+        </div>
+        <ul class="sidebar-menu">
+            <a href="dashboard.html" class="sidebar-item"><span class="sidebar-icon">📊</span><span>Dashboard</span></a>
+            <a href="products.html" class="sidebar-item"><span class="sidebar-icon">📦</span><span>Products</span></a>
+            <a href="orders.html" class="sidebar-item"><span class="sidebar-icon">🛒</span><span>Orders</span></a>
+            <a href="settings.html" class="sidebar-item active"><span class="sidebar-icon">⚙️</span><span>Settings</span></a>
+            <div style="height:1px;background:rgba(200,151,58,.2);margin:12px 16px;"></div>
+            <a href="../" class="sidebar-item" target="_blank"><span class="sidebar-icon">🌐</span><span>View Website</span></a>
+            <a href="#" class="sidebar-item" onclick="logout();return false;"><span class="sidebar-icon">🚪</span><span>Logout</span></a>
+        </ul>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-topbar">
+            <div class="topbar-title">⚙️ Settings</div>
+            <button class="btn btn-secondary btn-sm" onclick="loadAll()">🔄 Refresh</button>
+        </div>
+
+        <div class="content-card">
+            <div class="tab-row">
+                <button class="tab-btn active" onclick="switchTab('store', this)">🏪 Store</button>
+                <button class="tab-btn" onclick="switchTab('social', this)">🔗 Social Media</button>
+                <button class="tab-btn" onclick="switchTab('coupons', this)">🎟️ Coupons</button>
+                <button class="tab-btn" onclick="switchTab('categories', this)">📂 Categories</button>
+            </div>
+
+            <!-- STORE SETTINGS -->
+            <div class="tab-content active" id="tab-store">
+                <h3 style="margin:0 0 14px;font-size:15px;color:var(--text);">🏪 Basic Info</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Store Name</label>
+                        <input type="text" id="s_store_name" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Logo Text</label>
+                        <input type="text" id="s_logo_text" class="form-input" placeholder="BASIM">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tagline (Hero Title)</label>
+                        <input type="text" id="s_tagline" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hero Tag (small badge)</label>
+                        <input type="text" id="s_hero_tag" class="form-input" placeholder="✨ New Season 2025">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hero Subtitle</label>
+                        <input type="text" id="s_hero_subtitle" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">WhatsApp Number</label>
+                        <input type="text" id="s_whatsapp" class="form-input" placeholder="923347382564">
+                    </div>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">🎨 Hero Buttons</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Primary Button Text</label>
+                        <input type="text" id="s_hero_btn_primary" class="form-input" placeholder="Shop Now →">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Secondary Button Text</label>
+                        <input type="text" id="s_hero_btn_secondary" class="form-input" placeholder="Categories">
+                    </div>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">💰 Shipping & Currency</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Currency Symbol</label>
+                        <input type="text" id="s_currency" class="form-input" placeholder="₨">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Free Shipping Above</label>
+                        <input type="number" id="s_free_shipping_min" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Shipping Charge</label>
+                        <input type="number" id="s_shipping_charge" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Products to Show</label>
+                        <input type="number" id="s_total_products" class="form-input" value="40">
+                    </div>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">📢 Banners & Text</h3>
+                <div class="form-group">
+                    <label class="form-label">Announcement Bar Text</label>
+                    <input type="text" id="s_announcement" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Flash Sale Text</label>
+                    <input type="text" id="s_flash_sale_text" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">About Text</label>
+                    <textarea id="s_about_text" class="form-textarea"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">About Subtitle</label>
+                    <input type="text" id="s_about_sub" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Why Choose Us Title</label>
+                    <input type="text" id="s_about_why_title" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Footer Text</label>
+                    <input type="text" id="s_footer_text" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Size Guide Tip</label>
+                    <input type="text" id="s_size_guide_tip" class="form-input">
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">📊 About Stats</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Stat 1 Value</label>
+                        <input type="text" id="s_about_stat1_val" class="form-input" placeholder="400+">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stat 1 Label</label>
+                        <input type="text" id="s_about_stat1_lbl" class="form-input" placeholder="Products">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stat 2 Value</label>
+                        <input type="text" id="s_about_stat2_val" class="form-input" placeholder="41K+">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stat 2 Label</label>
+                        <input type="text" id="s_about_stat2_lbl" class="form-input" placeholder="Customers">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stat 3 Value</label>
+                        <input type="text" id="s_about_stat3_val" class="form-input" placeholder="⭐4.8">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stat 3 Label</label>
+                        <input type="text" id="s_about_stat3_lbl" class="form-input" placeholder="Rating">
+                    </div>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">🎨 Theme Color</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Primary Color (Gold)</label>
+                        <input type="color" id="s_primary_color" class="form-input" style="height:42px;padding:4px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dark Color</label>
+                        <input type="color" id="s_dark_color" class="form-input" style="height:42px;padding:4px;">
+                    </div>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">🖼️ Logo Image</h3>
+                <div class="form-group">
+                    <label class="form-label">Logo Image URL (upload below or paste URL)</label>
+                    <input type="text" id="s_logo_url" class="form-input" placeholder="/uploads/logo.png">
+                    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+                        <input type="file" id="logoFile" accept="image/*" style="font-size:12px;">
+                        <button class="btn btn-secondary btn-sm" onclick="uploadLogo()">Upload Logo</button>
+                    </div>
+                    <div id="logoPreview" style="margin-top:8px;"></div>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">🎰 Spin & Win Prizes (JSON)</h3>
+                <div class="form-group">
+                    <label class="form-label">Spin Prizes JSON array</label>
+                    <textarea id="s_spin_prizes_json" class="form-textarea" rows="4" placeholder='[{"label":"10% OFF","color":"#c8973a","text":"10% OFF","coupon":"SPIN10"}]'></textarea>
+                    <small style="color:var(--text-muted);font-size:11px;">Each item: label, color, text, coupon</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Spin Enabled (1 = yes, 0 = no)</label>
+                    <input type="text" id="s_spin_enabled" class="form-input" placeholder="1">
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">📏 Size Guide Table (JSON)</h3>
+                <div class="form-group">
+                    <label class="form-label">Size Guide JSON</label>
+                    <textarea id="s_size_guide_json" class="form-textarea" rows="4"></textarea>
+                    <small style="color:var(--text-muted);font-size:11px;">Array of {size, chest, waist, hip, height}</small>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">🤖 Bot Replies (JSON array of strings)</h3>
+                <div class="form-group">
+                    <textarea id="s_bot_replies" class="form-textarea" rows="3"></textarea>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">✅ Trust / Why Choose Us Points (JSON array)</h3>
+                <div class="form-group">
+                    <textarea id="s_trust_points" class="form-textarea" rows="3" placeholder='["Premium Quality","COD All Pakistan"]'></textarea>
+                </div>
+
+                <h3 style="margin:20px 0 14px;font-size:15px;color:var(--text);">📱 PWA & Defaults</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">PWA App Name</label>
+                        <input type="text" id="s_pwa_name" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">PWA Short Name</label>
+                        <input type="text" id="s_pwa_short_name" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Default Dark Mode (1/0)</label>
+                        <input type="text" id="s_default_dark" class="form-input" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Default Urdu (1/0)</label>
+                        <input type="text" id="s_default_urdu" class="form-input" placeholder="0">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:16px;">💾 Save Store Settings</button>
+            </div>
+
+            <!-- SOCIAL MEDIA -->
+            <div class="tab-content" id="tab-social">
+                <div class="card-header" style="padding:0;margin-bottom:16px;border:none;">
+                    <div class="card-title">🔗 Social Media Links</div>
+                    <button class="btn btn-primary btn-sm" onclick="addSocial()">➕ Add Social</button>
+                </div>
+                <div id="socialList"></div>
+            </div>
+
+            <!-- COUPONS -->
+            <div class="tab-content" id="tab-coupons">
+                <div class="card-header" style="padding:0;margin-bottom:16px;border:none;">
+                    <div class="card-title">🎟️ Coupon Codes</div>
+                    <button class="btn btn-primary btn-sm" onclick="addCoupon()">➕ Add Coupon</button>
+                </div>
+                <div id="couponList"></div>
+            </div>
+
+            <!-- CATEGORIES -->
+            <div class="tab-content" id="tab-categories">
+                <div class="card-header" style="padding:0;margin-bottom:16px;border:none;">
+                    <div class="card-title">📂 Categories</div>
+                    <button class="btn btn-primary btn-sm" onclick="addCategory()">➕ Add Category</button>
+                </div>
+                <div id="categoryList"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- SOCIAL MODAL -->
+<div class="modal-overlay" id="socialModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <div class="modal-title" id="socialModalTitle">Add Social</div>
+            <button class="modal-close" onclick="document.getElementById('socialModal').classList.remove('open')">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="socialId">
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Platform ID *</label>
+                    <input type="text" id="soc_platform" class="form-input" placeholder="whatsapp">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Display Name *</label>
+                    <input type="text" id="soc_name" class="form-input" placeholder="WhatsApp">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">URL *</label>
+                <input type="text" id="soc_url" class="form-input" placeholder="https://wa.me/923347382564">
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Icon (Emoji)</label>
+                    <input type="text" id="soc_icon" class="form-input" placeholder="💬" maxlength="4">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Color (CSS)</label>
+                    <input type="text" id="soc_color" class="form-input" placeholder="linear-gradient(135deg,#25D366,#128C7E)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <input type="text" id="soc_description" class="form-input" placeholder="Chat & order directly">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="document.getElementById('socialModal').classList.remove('open')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveSocial()">💾 Save</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = window.location.origin + '/api';
+const token = localStorage.getItem('admin_token');
+if (!token) window.location.href = 'login.html';
+
+const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+let settings = {};
+
+function showToast(msg, type = '') {
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.textContent = msg;
+    document.getElementById('toast').appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+function logout() {
+    if (confirm('Logout?')) {
+        localStorage.removeItem('admin_token');
+        window.location.href = 'login.html';
+    }
+}
+
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ═══ SETTINGS ═══
+
+async function uploadLogo() {
+    const fileInput = document.getElementById('logoFile');
+    if (!fileInput.files || !fileInput.files[0]) { showToast('Select a file first', 'error'); return; }
+    const fd = new FormData();
+    fd.append('images', fileInput.files[0]);
+    try {
+        const r = await fetch(`${API}/upload`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('admin_token') }, body: fd });
+        const d = await r.json();
+        if (d.success && d.urls && d.urls[0]) {
+            document.getElementById('s_logo_url').value = d.urls[0];
+            document.getElementById('logoPreview').innerHTML = `<img src="${d.urls[0]}" style="max-height:60px;border-radius:8px;">`;
+            showToast('Logo uploaded! Save settings to apply.', 'success');
+        } else showToast('Upload failed', 'error');
+    } catch(e) { showToast('Upload error', 'error'); }
+}
+
+async function loadSettings() {
+    try {
+        const r = await fetch(`${API}/settings`);
+        settings = await r.json();
+        
+        ['store_name','logo_text','logo_url','tagline','hero_tag','hero_subtitle','hero_btn_primary','hero_btn_secondary','whatsapp','currency','free_shipping_min','shipping_charge','announcement','flash_sale_text','about_text','about_sub','about_why_title','footer_text','size_guide_tip','about_stat1_val','about_stat1_lbl','about_stat2_val','about_stat2_lbl','about_stat3_val','about_stat3_lbl','total_products','primary_color','dark_color','spin_enabled','spin_prizes_json','size_guide_json','bot_replies','trust_points','pwa_name','pwa_short_name','default_dark','default_urdu'].forEach(k => {
+            const el = document.getElementById('s_' + k);
+            if (el && settings[k] !== undefined) el.value = settings[k];
+        });
+    } catch (err) { console.error(err); }
+}
+
+async function saveSettings() {
+    const data = {};
+    ['store_name','logo_text','logo_url','tagline','hero_tag','hero_subtitle','hero_btn_primary','hero_btn_secondary','whatsapp','currency','free_shipping_min','shipping_charge','announcement','flash_sale_text','about_text','about_sub','about_why_title','footer_text','size_guide_tip','about_stat1_val','about_stat1_lbl','about_stat2_val','about_stat2_lbl','about_stat3_val','about_stat3_lbl','total_products','primary_color','dark_color','spin_enabled','spin_prizes_json','size_guide_json','bot_replies','trust_points','pwa_name','pwa_short_name','default_dark','default_urdu'].forEach(k => {
+        const el = document.getElementById('s_' + k);
+        if (el) data[k] = el.value;
+    });
+
+    // Validate JSON fields before saving — invalid JSON here would silently
+    // break Spin Wheel / Size Guide / Bot Replies on the live site.
+    const jsonFields = { spin_prizes_json: 'Spin Prizes', size_guide_json: 'Size Guide', bot_replies: 'Bot Replies', trust_points: 'Trust Points' };
+    for (const [key, label] of Object.entries(jsonFields)) {
+        if (data[key] !== undefined && data[key].trim() !== '') {
+            try {
+                JSON.parse(data[key]);
+            } catch (e) {
+                showToast(`❌ "${label}" mein invalid JSON hai — save nahi hua. Format check karein.`, 'error');
+                return;
+            }
+        }
+    }
+
+    try {
+        const r = await fetch(`${API}/settings`, { method: 'PUT', headers, body: JSON.stringify(data) });
+        const res = await r.json();
+        if (res.success) showToast('✅ Settings saved!', 'success');
+        else showToast('Failed', 'error');
+    } catch (err) { showToast('Error', 'error'); }
+}
+
+// ═══ SOCIAL ═══
+async function loadSocial() {
+    try {
+        const r = await fetch(`${API}/social`);
+        const d = await r.json();
+        const list = d.social || [];
+        
+        document.getElementById('socialList').innerHTML = list.length ? list.map(s => `
+            <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:10px;margin-bottom:10px;">
+                <div style="font-size:28px;">${s.icon}</div>
+                <div style="flex:1;">
+                    <div><b>${s.name}</b></div>
+                    <div style="font-size:12px;color:var(--text-muted);">${s.url}</div>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick='editSocial(${JSON.stringify(s).replace(/'/g, "&#39;")})'>✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteSocial(${s.id}, '${s.name}')">🗑️</button>
+            </div>
+        `).join('') : '<div style="text-align:center;padding:30px;color:var(--text-muted);">No social links</div>';
+    } catch (err) { console.error(err); }
+}
+
+function addSocial() {
+    document.getElementById('socialModalTitle').textContent = '➕ Add Social';
+    ['socialId','soc_platform','soc_name','soc_url','soc_icon','soc_color','soc_description'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('socialModal').classList.add('open');
+}
+
+function editSocial(s) {
+    document.getElementById('socialModalTitle').textContent = '✏️ Edit Social';
+    document.getElementById('socialId').value = s.id;
+    document.getElementById('soc_platform').value = s.platform;
+    document.getElementById('soc_name').value = s.name;
+    document.getElementById('soc_url').value = s.url;
+    document.getElementById('soc_icon').value = s.icon || '';
+    document.getElementById('soc_color').value = s.color || '';
+    document.getElementById('soc_description').value = s.description || '';
+    document.getElementById('socialModal').classList.add('open');
+}
+
+async function saveSocial() {
+    const id = document.getElementById('socialId').value;
+    const data = {
+        platform: document.getElementById('soc_platform').value.trim(),
+        name: document.getElementById('soc_name').value.trim(),
+        url: document.getElementById('soc_url').value.trim(),
+        icon: document.getElementById('soc_icon').value.trim() || '🔗',
+        color: document.getElementById('soc_color').value.trim() || 'linear-gradient(135deg,#666,#333)',
+        description: document.getElementById('soc_description').value.trim()
+    };
+    
+    if (!data.platform || !data.name || !data.url) {
+        showToast('Fill required fields', 'error');
+        return;
+    }
+    
+    try {
+        const url = id ? `${API}/social/${id}` : `${API}/social`;
+        const method = id ? 'PUT' : 'POST';
+        const r = await fetch(url, { method, headers, body: JSON.stringify(data) });
+        const res = await r.json();
+        
+        if (res.success) {
+            showToast('✅ Saved', 'success');
+            document.getElementById('socialModal').classList.remove('open');
+            loadSocial();
+        }
+    } catch (err) { showToast('Error', 'error'); }
+}
+
+async function deleteSocial(id, name) {
+    if (!confirm(`Delete ${name}?`)) return;
+    try {
+        await fetch(`${API}/social/${id}`, { method: 'DELETE', headers });
+        showToast('Deleted', 'success');
+        loadSocial();
+    } catch (err) {}
+}
+
+// ═══ COUPONS ═══
+async function loadCoupons() {
+    try {
+        const r = await fetch(`${API}/coupons`);
+        const d = await r.json();
+        const list = d.coupons || [];
+        
+        document.getElementById('couponList').innerHTML = list.length ? list.map(c => `
+            <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:10px;margin-bottom:10px;">
+                <div style="font-size:24px;">🎟️</div>
+                <div style="flex:1;">
+                    <div><b style="color:var(--primary);letter-spacing:1px;">${c.code}</b></div>
+                    <div style="font-size:12px;color:var(--text-muted);">${c.description} — ${c.type === 'percent' ? c.value + '%' : '₨' + c.value}</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="deleteCoupon(${c.id}, '${c.code}')">🗑️</button>
+            </div>
+        `).join('') : '<div style="text-align:center;padding:30px;color:var(--text-muted);">No coupons</div>';
+    } catch (err) { console.error(err); }
+}
+
+async function addCoupon() {
+    const code = prompt('Coupon code (e.g. EID20):');
+    if (!code) return;
+    const type = prompt('Type (percent/flat):', 'percent');
+    if (!type) return;
+    const value = parseInt(prompt('Value (number):', '10'));
+    if (!value) return;
+    const description = prompt('Description:', value + (type === 'percent' ? '% off' : '₨ off'));
+    
+    try {
+        const r = await fetch(`${API}/coupons`, {
+            method: 'POST', headers,
+            body: JSON.stringify({ code, type, value, description, min_order: 0 })
+        });
+        const res = await r.json();
+        if (res.success) {
+            showToast('✅ Coupon added', 'success');
+            loadCoupons();
+        }
+    } catch (err) { showToast('Error', 'error'); }
+}
+
+async function deleteCoupon(id, code) {
+    if (!confirm(`Delete coupon "${code}"?`)) return;
+    try {
+        await fetch(`${API}/coupons/${id}`, { method: 'DELETE', headers });
+        showToast('Deleted', 'success');
+        loadCoupons();
+    } catch (err) {}
+}
+
+// ═══ CATEGORIES ═══
+async function loadCategories() {
+    try {
+        const r = await fetch(`${API}/categories`);
+        const d = await r.json();
+        const list = d.categories || [];
+        
+        document.getElementById('categoryList').innerHTML = list.length ? list.map(c => `
+            <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:10px;margin-bottom:10px;">
+                <div style="font-size:28px;">${c.icon}</div>
+                <div style="flex:1;">
+                    <div><b>${c.name}</b></div>
+                    <div style="font-size:12px;color:var(--text-muted);">slug: ${c.slug}</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="deleteCategory(${c.id}, '${c.name}')">🗑️</button>
+            </div>
+        `).join('') : '<div style="text-align:center;padding:30px;color:var(--text-muted);">No categories</div>';
+    } catch (err) { console.error(err); }
+}
+
+async function addCategory() {
+    const name = prompt('Category name (e.g. Shoes):');
+    if (!name) return;
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    const icon = prompt('Icon emoji:', '📁') || '📁';
+    
+    try {
+        const r = await fetch(`${API}/categories`, {
+            method: 'POST', headers,
+            body: JSON.stringify({ name, slug, icon })
+        });
+        const res = await r.json();
+        if (res.success) {
+            showToast('✅ Category added', 'success');
+            loadCategories();
+        }
+    } catch (err) { showToast('Error', 'error'); }
+}
+
+async function deleteCategory(id, name) {
+    if (!confirm(`Delete "${name}"?`)) return;
+    try {
+        await fetch(`${API}/categories/${id}`, { method: 'DELETE', headers });
+        showToast('Deleted', 'success');
+        loadCategories();
+    } catch (err) {}
+}
+
+// ═══ INIT ═══
+function loadAll() {
+    loadSettings();
+    loadSocial();
+    loadCoupons();
+    loadCategories();
+}
+loadAll();
+</script>
+
+</body>
+</html>
